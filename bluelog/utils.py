@@ -1,0 +1,23 @@
+
+from urllib.parse import urljoin, urlparse
+from flask import request, redirect, current_app
+
+
+def is_safe_url(target):
+    rel_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and rel_url.netloc == test_url.netloc
+
+def redirect_back(default='blog.index', **kwargs):
+    for target in request.args.get('next'), request.referrer:
+        if not target:
+            continue
+        if is_safe_url(target):
+            return redirect(target )
+
+    return redirect(default, **kwargs)
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1).lower() in current_app.config['BLUELOG_ALLOW_IMAGE_EXTENSIONS']
